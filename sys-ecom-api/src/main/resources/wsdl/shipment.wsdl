@@ -1,0 +1,46 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch="http://spring.io/guides/gs-producing-web-service" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://spring.io/guides/gs-producing-web-service" targetNamespace="http://spring.io/guides/gs-producing-web-service">
+<wsdl:types>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://spring.io/guides/gs-producing-web-service">
+<xs:element name="getShipment">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="productWeight" type="xs:string"/>
+<xs:element name="productHeight" type="xs:string"/>
+<xs:element name="productDepth" type="xs:string"/>
+<xs:element name="productWidth" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+<xs:element name="getShipmentResponse">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="charges" type="xs:int"/>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:schema>
+</wsdl:types>
+<wsdl:message name="getShipmentResponse">
+<wsdl:part element="tns:getShipmentResponse" name="getShipmentResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:portType name="getShipment">
+<wsdl:operation name="getShipment">
+<wsdl:input message="getShipment" name="getShipment"> </wsdl:input>
+<wsdl:output message="tns:getShipmentResponse" name="getShipmentResponse"> </wsdl:output>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="getShipmentSoap11" type="tns:getShipment">
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+<wsdl:operation name="getShipment">
+<soap:operation soapAction=""/>
+<wsdl:output name="getShipmentResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="getShipmentService">
+<wsdl:port binding="tns:getShipmentSoap11" name="getShipmentSoap11">
+<soap:address location="http://10.26.8.249:8080/ws/shipment"/>
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>

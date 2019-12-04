@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd">
+	
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ee07f9bf-98d1-4608-b2b8-74e7c2f7ba45" >
+		<http:listener-connection host="0.0.0.0" port="8085" />
+	</http:listener-config>
+		<flow name="kafka-publisher-flow" doc:id="868dc022-df74-4616-9b67-94772b858052">
+		<!-- <scheduler doc:name="Scheduler" doc:id="5f782544-3e18-4228-9640-1f19b6104f4f" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="8" timeUnit="HOURS" startDelay="4"/>
+			</scheduling-strategy>
+		</scheduler> -->
+		<http:listener doc:name="Listener" doc:id="e5890aa0-e432-450a-a354-13fff7401e65" config-ref="HTTP_Listener_config" path="/pub-sub"/>
+		<ee:transform doc:name="Start_End date query param" doc:id="1edb7b28-531b-40c1-ac29-81e29b7688f9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+endDate:(now()  >> 'IST' as TimeZone) as String {format:"MMddYYYhhmmss"} ,
+startDate:( now()  >> 'IST' as TimeZone) as DateTime {format:"MMddYYY$( (((now()  >> 'IST' as TimeZone).hour) - 8 ) as String {format:"00"})mmss"}
+//startDate:"11272019103701",
+//endDate:"11272019063701"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="GET" doc:name="Request to get orders between dates" doc:id="ee2e1c93-25b9-4cfa-b697-332dbeeea880" config-ref="Spring_Http_Request_configuration" path="${spring.order.path.list}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"startDate" : payload.startDate,
+	"endDate": payload.endDate
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="bfac3cd0-a8f0-4196-a758-94b0e63c2e82" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="INFO Logger- OrderID Spring Call" doc:id="534edbd3-e83c-4c82-be10-cdc8d88c0aed" />
+		<kafka:producer doc:name="Publish Message" doc:id="bdacf748-d001-42f6-9da7-71187a356023" config-ref="Apache_Kafka_Producer_configuration" topic="ordertopic" key="#[now().milliseconds]"/>
+	
+	</flow>
+	</mule>

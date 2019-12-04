@@ -22,8 +22,6 @@ securedBy: [ClientIdAuth]
         example: !include examples/request/order.json
     responses:
       200:
-        body:
-          application/json:
 
 /cart:
   post:
@@ -59,3 +57,19 @@ securedBy: [ClientIdAuth]
         200:
           body:
             multipart/form-data:
+/cart-router:
+  post:
+    description:
+    is: [Errorable]
+    body:
+      application/json:
+    responses:
+      200:
+/order-router:
+  post:
+    description:
+    is: [Errorable]
+    body:
+      application/json:
+    responses:
+      200:

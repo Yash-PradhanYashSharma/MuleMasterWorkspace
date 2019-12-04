@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+
+	<http:listener-config name="api-httpListenerConfig">
+		<http:listener-connection host="0.0.0.0"
+			port="${http.port}" />
+	</http:listener-config>
+	<apikit:config name="api-config" api="api.raml"
+		outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<configuration-properties doc:name="Configuration properties" doc:id="17e68533-7b57-4d47-8c38-4580f19033da" file="properties/${env}.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="7eca8de2-5195-4b41-b7bd-885a313f734a" file="properties/common.yaml" />
+	<global-property doc:name="Global Property" doc:id="a66e5851-56ea-4e52-99ca-d17bbbecc5f3" name="env" value="dev" />
+<db:config name="MYSQL_Database_Config" doc:name="Database Config" doc:id="9f697dc7-9e40-4f61-ad9b-b71b1cecbf46" >
+		<db:my-sql-connection host="${mysql.host}" port="${mysql.port}" user="${mysql.username}" password="${mysql.password}" database="${mysql.db}" />
+	</db:config>
+	<http:request-config name="SAP_API_HTTP_Configuration" doc:name="HTTP Request configuration" doc:id="6d8b2add-1e94-4187-9134-3b0805a10959" >
+		<http:request-connection protocol="HTTPS" host="${sap.host}" port="${sap.port}" connectionIdleTimeout="${sap.timeout}" />
+	</http:request-config>
+	 <http:request-config name="Spring_Http_Request_configuration" doc:name="HTTP Request configuration" doc:id="933d19aa-cb3d-4476-968c-80e9315613bd" >
+		<http:request-connection host="${spring.host}" port="${spring.port}" />
+	</http:request-config>
+	<kafka:kafka-producer-config name="Apache_Kafka_Producer_configuration" doc:name="Apache Kafka Producer configuration" doc:id="274ca627-4236-4af8-b71f-03593c220ef2" >
+		<kafka:basic-kafka-producer-connection bootstrapServers="localhost:9092" />
+	</kafka:kafka-producer-config>
+	<kafka:kafka-consumer-config name="Apache_Kafka_Consumer_configuration" doc:name="Apache Kafka Consumer configuration" doc:id="e93eb453-3a8e-4dbf-a85f-227b8eb3e785" >
+		<kafka:basic-kafka-consumer-connection groupId="1" bootstrapServers="localhost:9092" />
+	</kafka:kafka-consumer-config>
+	<api-gateway:autodiscovery apiId="15897114" doc:name="API Autodiscovery" doc:id="c81de32c-5dbb-433b-ac9e-261f16af5066" flowRef="api-main" />
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="66ab74ff-11a3-4cf0-be11-0340e9a6d757" >
+		<wsc:connection wsdlLocation="wsdl/shipment.wsdl" service="getShipmentService" port="getShipmentSoap11" address="http://10.26.8.249:8080/ws" />
+	</wsc:config>
+	
+	
+</mule>

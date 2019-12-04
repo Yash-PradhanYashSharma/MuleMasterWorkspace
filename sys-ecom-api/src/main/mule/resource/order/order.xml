@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="order-router-flow" doc:id="9ff7ee73-0fb4-4d06-a3b1-d22377b3d3d5" >
+		<logger level="INFO" doc:name="INFO Logger: In System Order Router" doc:id="ba46159d-879b-4923-ad74-ec96fed188a1" message="In System Order Router"/>
+		<choice doc:name="Choice" doc:id="df297c49-74e1-461c-b3c5-8d3365bcd8d2" >
+			<when expression='#[message.attributes.queryParams.relativePath contains "order/create"]'>
+				<logger level="INFO" doc:name="INFO Logger: Create API Call" doc:id="207a144e-2373-4282-8b19-b99b51084054" message="Create API Call"/>
+				<http:request method="POST" doc:name="Create Order Spring Call" doc:id="62c65529-510e-4f2c-8864-4a07a08503fd" config-ref="Spring_Http_Request_configuration" path="${spring.order.path.create}"/>
+			</when>
+			<when expression='#[message.attributes.queryParams.relativePath contains "order/list"]'>
+				<logger level="INFO" doc:name="INFO Logger: list Order" doc:id="f74fb612-82d6-47cb-ab37-87f4a908f469" message="List Order  #[message.attributes.queryParams.userId]"/>
+				<http:request method="GET" doc:name="List Order Spring Call" doc:id="d7a67722-f533-4069-aa37-4ca33a9766e1" config-ref="Spring_Http_Request_configuration" path="${spring.order.path.list}">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"userId" : message.attributes.queryParams.userId
+}]]]></http:query-params>
+				</http:request>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="INFO Logger: Invaild Order Router operation" doc:id="4cb74d5e-321c-4866-ab03-4a2a1d21ba93" message="Invaild Order Router operation!!"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="4a126b93-3193-4e7d-8805-9236e9efde73">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+	</flow>
+</mule>

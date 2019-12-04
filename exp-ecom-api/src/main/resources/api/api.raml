@@ -1,29 +1,18 @@
 #%RAML 1.0
 title: exp-ecomm-api
 description: Experience layer API for e-ecommerce
-version:  v1
+baseUri: https://ecom-seller-exp-api.com
+version: v1
 protocols: [HTTPS]
 
 traits:
   Errorable: !include common/traits/errorable.raml
+  client-id-required: !include common/traits/client-id-auth.raml
 
 securitySchemes:
-  ClientIdAuth: !include common/security/client-id-auth.raml
+  oauth_2_0: !include common/security/okta-oauth.raml
 
-securedBy: [ClientIdAuth]
-
-/order:
-  post:
-    description: Order Detail for order id
-    is: [Errorable]
-    body:
-      application/json:
-        type: !include data-types/request/order.raml
-        example: !include examples/request/order.json
-    responses:
-      200:
-        body:
-          application/json:
+securedBy: [oauth_2_0]
 
 /cart:
   post:
@@ -39,6 +28,61 @@ securedBy: [ClientIdAuth]
       202:
         body:
           application/json:
+  /init:
+    post:
+      description: initialize cart
+      is: [Errorable]
+      body:
+        application/json:
+          example:  !include examples/request/cart-init.json
+          type: !include data-types/request/genric-cart.raml
+      responses:
+        200:
+  /refresh:
+    post:
+      description: update cart
+      is: [Errorable]
+      body:
+        application/json:
+          example:  !include examples/request/cart-init.json
+          type: !include data-types/request/genric-cart.raml
+      responses:
+        200:
+  /search:
+    get:
+      description: search on the basis of searchparam query parameter
+      is: [Errorable]
+      queryParameters:
+        keyword:  string
+      responses:
+        200:
+          body:
+            application/json:            
+  /promo:
+    get:
+      description:  apply promo code to get discount on specific product
+      is: [Errorable]
+      queryParameters:
+        promoId:  string
+      responses:
+        200:
+  /freight:
+    post:
+      description: prduct params to calculate shiping charges
+      is: [Errorable]
+      body:
+        application/json:
+          example: !include examples/request/cart-freight.json
+          type: !include data-types/request/cart-freight.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                {
+                  "charges":23
+                }
+
 
 /invoice:
   post:
@@ -60,3 +104,54 @@ securedBy: [ClientIdAuth]
         200:
           body:
             multipart/form-data:
+
+/logticket:
+  post:
+    description: logging ticket agaist orderid
+    is: [Errorable]
+    body:
+      application/json:
+        example: !include examples/request/logticket.json
+        type: !include data-types/request/logticket.raml
+    responses:
+      200:
+        body:
+          application/json:
+
+/order:
+  post:
+    description: Order Detail for order id
+    is: [Errorable]
+    body:
+      application/json:
+        type: !include data-types/request/order.raml
+        example: !include examples/request/order.json
+    responses:
+      200:
+      
+  /create:
+    post:
+      description: create order for given cart items
+      is: [Errorable]
+      body:
+        application/json:
+          example:  !include examples/request/cart-init.json
+          type: !include data-types/request/genric-cart.raml
+      responses:
+        200:
+          body:
+            application/json:
+  /list:
+    get:
+      description: list orders for userid
+      is: [Errorable]
+      queryParameters:
+        userId: string
+      responses:
+        200:
+          body:
+            application/json:
+              
+
+            
+      

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<flow name="cart-router-flow" doc:id="5aea5b2e-d9ef-4149-91e0-adba801c41a0" >
+		<logger level="INFO" doc:name="INFO Logger: In System layer Cart" doc:id="21005381-2b59-40fa-a70a-e11202de62de" message="In System layer Cart"/>
+		<choice doc:name="Choice" doc:id="b4b1f0f9-90de-4838-b943-06d6be7bd21c" >
+			<when expression='#[message.attributes.queryParams.relativePath contains "init"]'>
+				<http:request method="POST" doc:name="Initialize Cart" doc:id="e19438a5-1ee1-4a7a-afd1-ffad829005a6" config-ref="Spring_Http_Request_configuration" path="${spring.cart.path.init}"/>
+			</when>
+			<when expression='#[message.attributes.queryParams.relativePath contains "refresh"]'>
+				<http:request method="POST" doc:name="Update Cart" doc:id="8ce0d381-9b86-41ff-84dc-0b6850a8d59d" config-ref="Spring_Http_Request_configuration" path="${spring.cart.path.refresh}"/>
+			</when>
+			<when expression='#[message.attributes.queryParams.relativePath contains "search"]'>
+				<http:request method="GET" doc:name="Search Cart" doc:id="f96e4e4a-ac58-41c3-af72-8974bcdf7718" path="${spring.cart.path.search}" config-ref="Spring_Http_Request_configuration">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"keyword" : message.attributes.queryParam.keyword
+}]]]></http:query-params>
+				</http:request>
+			</when>
+			<when expression='#[message.attributes.queryParams.relativePath contains "freight"]'>
+				<ee:transform doc:name="soap request" doc:id="78b8263b-d70b-42c5-9cc1-4a51a15cc713">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns gs http://spring.io/guides/gs-producing-web-service
+---
+{
+	gs#getShipment:{
+		gs#productDepth: payload.depth as String,
+		gs# productHeight: payload.height as String,
+		gs# productWeight: payload.weight as String,
+		gs# productWidth: payload.width as String
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<wsc:consume doc:name="Shipment SOAP Service" doc:id="4df200d0-7ea0-432c-bf2c-ac50969cd3e7" config-ref="Web_Service_Consumer_Config" operation="getShipment"/>
+				<ee:transform doc:name="freight soap api response" doc:id="03757da9-4eb6-43d7-bbd6-a2d3ca1f7a62">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+ns ns2 http://spring.io/guides/gs-producing-web-service
+---
+charges:payload.body.ns2#getShipmentResponse.charges as Number]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[message.attributes.queryParams.relativePath contains "promo"]'>
+				<logger level="INFO" doc:name="INFO Logger: Apply Promo" doc:id="b4ca6959-03e7-4845-a326-a774a47f05ac" message="Applying Promo for Items"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="INFO Logger: Invaild Operation" doc:id="6c0910b6-2c4b-41d0-a5c2-fc7096f4fa69" message="Invaild Operation"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="spring api response as json" doc:id="2a1479b0-26b2-4442-9d00-f974cf1ecf01">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+	</flow>
+</mule>

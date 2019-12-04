@@ -6,8 +6,24 @@ sap:
   timeout:  "60000"
   
 mysql:
-  host: "10.26.10.34"
+  #host: "10.26.10.34"
+  host: "10.26.8.249"
   port: "3306"
   username: "root"
   password: "root"
   db: "e_com_mule_db"
+  
+spring:
+  #host: "10.26.10.34"
+  host: "10.26.8.249"
+  port: "8080"
+  cart.path:
+    init: "/cart/initialize"
+    refresh: "/cart/update"
+    search: "/product/search"
+  order.path:
+    create: "/order/create"
+    list: "/order/getOrders"
+    getOrder: "/order/getOrder"
+  
+  

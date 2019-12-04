@@ -1,4 +1,4 @@
 {
-  "orderId": 123,
+  "orderId": "OR123",
   "functionName": "getOrder"
 }

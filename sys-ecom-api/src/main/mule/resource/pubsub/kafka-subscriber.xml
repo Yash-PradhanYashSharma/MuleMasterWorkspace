@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	<sub-flow name="stripeApiCallSubFlow" doc:id="dfef53a8-a9e4-4587-897b-8f67287a6e05" >
+		<ee:transform doc:name="invoice creation request" doc:id="4773e875-86f7-43c6-acaf-9d48dbafea0d">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+"customer": "cus_GAxUJZ68UTDiWk"
+]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<http:request method="POST" doc:name="Invoice Creation Strip Call" doc:id="d279a098-ce16-4fff-a94c-0ee948d0bde0" config-ref="SAP_API_HTTP_Configuration" path="/v1/invoices">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer sk_test_q69XflYx3m3impJkpy9JbCR100QOzTTAn3",
+	"Content-Type" : "application/x-www-form-urlencoded"
+}]]]></http:headers>
+		</http:request>
+		<set-variable value="#[payload.id]" doc:name="invoiceId" doc:id="a098c961-582d-41de-952a-c3dc909776d8" variableName="invoiceId" />
+		<ee:transform doc:name="Transform Message" doc:id="c2bc392f-4d2f-43ae-a253-f00fe81b1fa7">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+{}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<http:request method="POST" doc:name="Finalize Invoice Stripe Call" doc:id="d9fe83d7-db2c-460a-a6fb-f3eb0edcde0d" config-ref="SAP_API_HTTP_Configuration" path="/v1/invoices/{invoiceId}/finalize">
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer sk_test_q69XflYx3m3impJkpy9JbCR100QOzTTAn3",
+	"Content-Type" : "application/x-www-form-urlencoded"
+}]]]></http:headers>
+				<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"invoiceId" : vars.invoiceId
+}]]]></http:uri-params>
+				<http:response-validator>
+					<http:success-status-code-validator values="200,400" />
+				</http:response-validator>
+			</http:request>
+		<ee:transform doc:name="invoicepdf" doc:id="a481574c-8b03-4936-95d9-12c1a6499979">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="invoicePDF"><![CDATA[%dw 2.0
+output application/json
+---
+payload.invoice_pdf]]></ee:set-variable>
+					<ee:set-variable variableName="status"><![CDATA[%dw 2.0
+output application/java
+---
+"Completed"]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+	</sub-flow>
+	<sub-flow name="statusUpdateSubFlow" doc:id="dbb06755-74b6-4db4-b7ab-f36ef83c44be" >
+		<http:request method="GET" doc:name="Updating Status to INPROCESS" doc:id="c8512a56-d244-4299-9928-8951f6685ec4" config-ref="Spring_Http_Request_configuration" path="/order/updateStatus">
+				<http:query-params><![CDATA[#[output application/java
+---
+{
+	"orderId" : vars.orderId,
+	"statusId" : vars.status,
+	"invoiceId" : vars.invoiceId
+}]]]></http:query-params>
+			</http:request>
+	</sub-flow>
+
+	<flow name="kafka-subscriber-flow" doc:id="4de5a768-963b-4b8e-871e-d6286094f93b">
+	<kafka:consumer doc:name="Message Consumer" doc:id="b0018324-2259-4805-9bce-8ed965659c40" config-ref="Apache_Kafka_Consumer_configuration" topic="ordertopic"/>
+		<ee:transform doc:name="Transform Message" doc:id="2fb77870-4dcf-4879-976e-cd9b2b1a81f6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+read(payload,"application/json")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="4f982846-6168-4d0c-b729-35e472751845" collection="#[payload]">
+			<logger level="INFO" doc:name="INFO Logger: Status Update Spring Call" doc:id="bd481d6b-b786-46a2-bff5-c819f9ccbcd8" />
+			<ee:transform doc:name="orderPayload" doc:id="38b7641e-80af-4a74-bbb3-5b52486eb05a" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="status" ><![CDATA[%dw 2.0
+output application/java
+---
+"InProcess"]]></ee:set-variable>
+					<ee:set-variable variableName="orderId" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.orders.orderId]]></ee:set-variable>
+					<ee:set-variable variableName="orderpayload" ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<flow-ref doc:name="Updating Status to INPROCESS" doc:id="545d2e33-60b8-4068-ae91-1fcb20f4476c" name="statusUpdateSubFlow" />
+			<foreach doc:name="iterating on orderItems" doc:id="6b6775cc-a9ff-4335-b584-7fba35fbc2aa" collection="#[vars.orderpayload.orderItems]">
+				<ee:transform doc:name="Transform Message" doc:id="9132585e-42a5-4a9a-a164-58626c22731d">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/x-www-form-urlencoded
+---
+{
+	"customer": "cus_GAxUJZ68UTDiWk",
+	"description": payload.productId,
+	"currency": "INR",
+	"quantity": payload.quantity,
+	"unit_amount": payload.unitPrice
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+				<http:request method="POST" doc:name="Invoice Item Stripe Call" doc:id="371ddf33-ccd2-4387-a2bb-f318d9c0ce89" config-ref="SAP_API_HTTP_Configuration" path="/v1/invoiceitems" outputMimeType="application/x-www-form-urlencoded">
+					<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer sk_test_q69XflYx3m3impJkpy9JbCR100QOzTTAn3",
+	"Content-Type" : "application/x-www-form-urlencoded"
+}]]]></http:headers>
+				</http:request>
+				<logger level="INFO" doc:name="Logger" doc:id="3f93fbc0-0930-43a3-91c0-43a9bf372a6d" />
+			</foreach>
+			<flow-ref doc:name="stripeApiCallSubFlow" doc:id="82250fd4-ac6b-49c5-8442-bfa06eed4ec3" name="stripeApiCallSubFlow" />
+			<flow-ref doc:name="Updating Status to COMPLETED" doc:id="bd922f8c-5075-42ce-9813-1c4532011561" name="statusUpdateSubFlow"/>
+			<logger level="INFO" doc:name="Logger" doc:id="e8a86748-b78c-468c-8090-e4432178a4bb" />
+		</foreach>
+		<logger level="INFO" doc:name="INFO Logger: Stripe Invoice Call" doc:id="faf964bf-7060-474d-84e4-e3f4fcf10a29" />
+		
+	
+</flow>
+</mule>

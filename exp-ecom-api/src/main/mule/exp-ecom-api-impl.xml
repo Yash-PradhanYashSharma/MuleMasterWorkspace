@@ -52,4 +52,26 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		
 </http:request>
 	</flow>
+	<flow name="cart-router-flow" doc:id="fd27438d-b23d-4395-b33b-30d08584817f" >
+		<logger level="INFO" doc:name="INFO Logger: Cart Processing Started" doc:id="5fc02b73-0d12-47b8-845e-512f1d296931" message="Cart Processing Started!!!!!! "/>
+		<http:request method="POST" doc:name="System:Router for Cart API" doc:id="87d0775b-f640-4477-817b-57e446f1388a" config-ref="SystemHttp_Request_configuration" path="/cart-router">
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"relativePath" : message.attributes.relativePath,
+	"method" : message.attributes.method
+}]]]></http:query-params>
+				</http:request>
+	</flow>
+	<flow name="order-router-flow" doc:id="940a60e1-7886-41ac-9ff1-112d012f6cb9" >
+		<logger level="INFO" doc:name="INFO Logger: Order Processing Started" doc:id="080633f5-5508-4c00-89c7-afbab4048d45" message="Order Processing Started!!"/>
+		<http:request method="POST" doc:name="System:Router for Order API" doc:id="fd7f0aa0-5c41-4b52-8970-545d26818f19" config-ref="SystemHttp_Request_configuration" path="/order-router">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"relativePath" : message.attributes.relativePath,
+	"userId" : message.attributes.queryParams.userId
+}]]]></http:query-params>
+		</http:request>
+	</flow>
 </mule>

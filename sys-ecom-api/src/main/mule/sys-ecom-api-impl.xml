@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
 	
 	
-	<sub-flow name="generatePDF" doc:id="ecde717f-29d2-452e-b8be-f05a7970e39a" >
+
+	<!-- <sub-flow name="generatePDF" doc:id="ecde717f-29d2-452e-b8be-f05a7970e39a" >
 		<ee:transform doc:name="Transform Message" doc:id="1992be05-9c1e-4f95-ab9b-ffc58046a8ee">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
 
 var stringObj= write(payload ,"application/json")
----
+
 //"OrderDetails:  \n\n" ++ trim ((((stringObj replace "{" with "") replace "}" with "") replace "[" with "") replace "]" with "")
 stringObj]]></ee:set-payload>
 			</ee:message>
@@ -32,28 +35,37 @@ stringObj]]></ee:set-payload>
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/octet-stream
----
+
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-	</sub-flow>
+	</sub-flow> -->
 	<sub-flow name="orderJsonToPDF" doc:id="b28bcaf2-c308-410a-b6f5-3451bd0583d7" >
 		<ee:transform doc:name="Transform Message" doc:id="244674b5-a5fa-466b-9595-a4aa19388729" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
-
 var stringObj= write(payload ,"application/json")
 ---
 //"OrderDetails:  \n\n" ++ trim ((((stringObj replace "{" with "") replace "}" with "") replace "[" with "") replace "]" with "")
-stringObj]]></ee:set-payload>
+stringObj replace  ".00" with ""]]></ee:set-payload>
 			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="originalPayload" ><![CDATA[%dw 2.0
+output application/java
+var stringObj= write(vars.originalPayload ,"application/json")
+---
+//"OrderDetails:  \n\n" ++ trim ((((stringObj replace "{" with "") replace "}" with "") replace "[" with "") replace "]" with "")
+stringObj]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
 		<java:new constructor="OrderJsonToPDF()" doc:name="New" doc:id="77ab16ad-2e71-4d54-92af-aff774cf7642" class="com.yash.utility.OrderJsonToPDF" target="JsonToPdf" />
-		<java:invoke doc:name="Invoke" doc:id="6709bf4d-7d44-4dd7-870f-3e08c63e9953" instance="#[vars.JsonToPdf]" class="com.yash.utility.OrderJsonToPDF" method="jsontopdf(String , String)" outputMimeType="application/octet-stream">
+		<java:invoke doc:name="Invoke" doc:id="6709bf4d-7d44-4dd7-870f-3e08c63e9953" instance="#[vars.JsonToPdf]" class="com.yash.utility.OrderJsonToPDF" method="jsontopdf(String , String,String)" outputMimeType="application/octet-stream">
 			<java:args><![CDATA[#[{
         filename: "C:\\test\\test1.pdf",
-        content: payload
+        content: payload,
+        varr: vars.originalPayload
+        
       }]]]></java:args>
 		</java:invoke>
 		<ee:transform doc:name="Transform Message" doc:id="db5f0167-6df1-41a3-9c88-f20546801bf2" >
@@ -64,8 +76,8 @@ output application/octet-stream
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-	</sub-flow>
-	<flow name="get-order-flow" doc:id="084a10b0-a3cc-44b7-a346-d983d1bb6fd9" >
+	</sub-flow> 
+	<!-- <flow name="get-order-old-flow" doc:id="084a10b0-a3cc-44b7-a346-d983d1bb6fd9" >
 		<logger level="INFO" doc:name="Logger" doc:id="16f785a0-325b-4b23-9b2e-bdc3359bea81" message="#[attributes.queryParams.'type']"/>
 		<set-variable value="#[attributes.queryParams.'type']" doc:name="type" doc:id="6e7f3ba0-47fd-421c-9b75-78dac57324b9" variableName="type"/>
 		<db:select doc:name="Select" doc:id="6e00cfba-a501-4f1f-bb69-e0d43d46de42" config-ref="MYSQL_Database_Config">
@@ -83,10 +95,10 @@ var ordeHeader= {
 	"createdBy":payload[0].createdBy,
 	"productStoreId":payload[0].productStoreId
 }
----
+
 {
 	(ordeHeader),
-	products: payload map ($ -- ordeHeader)
+	products: payload map ($  ordeHeader)
 }
 ]]></ee:set-payload>
 			</ee:message>
@@ -109,7 +121,7 @@ var ordeHeader= {
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
----
+
 {
     orderId: vars.orderId,
     status: "Order Not Found"
@@ -130,11 +142,11 @@ output application/json
 				<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
 output application/java
 var productId= (payload.products.*productId) joinBy "','" 
----
+
 "select productId,quantity from product where productId in ('" ++ productId ++ "' )"]]></ee:set-variable>
 				<ee:set-variable variableName="originalPayload" ><![CDATA[%dw 2.0
 output application/json
----
+
 payload]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
@@ -145,7 +157,7 @@ payload]]></ee:set-variable>
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
----
+
 (payload map using (product= $) {
 	(vars.originalPayload.products filter (($.productId == product.productId) and $.quantity >= product.quantity) map  {
 		dd:$.productId,
@@ -156,7 +168,7 @@ output application/json
 			<ee:variables >
 				<ee:set-variable variableName="orderTableResponse" ><![CDATA[%dw 2.0
 output application/json
----
+
 payload]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
@@ -167,7 +179,7 @@ payload]]></ee:set-variable>
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
----
+
 {
 	Status:"order Canceled",
 	Reason: "product is out of stock"
@@ -184,7 +196,7 @@ output application/json
 output application/java
 var payload01 = vars.originalPayload
 var data =  payload01.orderId as Number ++ ",'" ++ payload01.orderName ++ "','"  ++ payload01.orderDate ++ "','" ++ payload01.createdBy ++ "','" ++ payload01.productStoreId ++ "','" ++ payload01.userId
----
+
 "INSERT INTO e_com_mule_db.order (orderId, orderName, orderDate, createdBy, productStoreId, userId) values (" ++ data ++ "');"]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
@@ -197,7 +209,7 @@ var data =  payload01.orderId as Number ++ ",'" ++ payload01.orderName ++ "','" 
 					<ee:variables >
 						<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
 output application/json
----
+
 (vars.orderTableResponse map using (product= $) {
 	(vars.originalPayload.products filter (($.productId == product.productId) and $.quantity <= product.quantity) map  {
 		orderId: vars.originalPayload.orderId,
@@ -217,7 +229,7 @@ output application/json
 					<ee:variables >
 						<ee:set-variable variableName="query" ><![CDATA[%dw 2.0
 output application/json
----
+
 (vars.orderTableResponse map using (product= $) {
 	(vars.originalPayload.products filter (($.productId == product.productId) and $.quantity <= product.quantity) map  {
 		orderId: vars.originalPayload.orderId,
@@ -235,7 +247,7 @@ output application/json
 					<ee:message>
 						<ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+
 {
 	status:"Order has been placed successfully",
 	orderId:vars.originalPayload.orderId 
@@ -245,6 +257,34 @@ output application/json
 			</otherwise>
 		</choice>
 		<logger level="INFO" doc:name="Logger" doc:id="fb8d7655-f409-4b43-9e5d-2d91cfc302ee" message="processing completed  #[payload]"/>
+	</flow>
+ -->	<flow name="get-order-flow" doc:id="709bb979-222b-4ea7-8a05-4589976118f5">
+		<logger level="INFO" doc:name="Logger" doc:id="466de728-0332-4bf5-a22c-248b636f93ce" />
+		<set-variable value="#[attributes.queryParams.'type']" doc:name="type" doc:id="9704429c-ad06-4c36-86e4-f2931bdf9ed9" variableName="type" />
+		<set-variable value="#[payload]" doc:name="originalPayload" doc:id="20fb2599-1efb-43f1-b6d9-3ac10a80ccd6" variableName="originalPayload"/>
+		<http:request method="GET" doc:name="getorder for orderid" doc:id="9902e518-f49b-49ae-a0f4-8d7ee7d591fd" config-ref="Spring_Http_Request_configuration" path="${spring.order.path.getOrder}">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"orderId" : payload.orderId
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="response" doc:id="a9dafb69-7ffb-4830-821c-5e1137836096">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="6343b514-8521-41b3-bc56-214adf089175" >
+			<when expression="#[vars.'type' != null and vars.'type' == &quot;pdf&quot;]">
+				<flow-ref doc:name="orderJsonToPDF" doc:id="c036dd9d-72d9-4b68-bc85-3f671b049a5e" name="orderJsonToPDF"/>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="INFO LOGGER: Success" doc:id="f1b10e29-efba-4378-9025-56ca60080ea7" />
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="get-invoice-by-id-flow" doc:id="937c6095-a9b7-476f-a2de-8f13ddd69cb4" >
 		 <set-variable value="#[attributes.uriParams.invoiceId]" doc:name="invoiceId" doc:id="34a400f6-a4b2-4b07-ab9f-6d10b1bd1e2b" variableName="invoiceId"/>
@@ -258,27 +298,74 @@ output application/json
 			<http:uri-params ><![CDATA[#[output application/java
 ---
 {
-	invoiceId : "in_1FQsVxLtNhj8WVidCrt5kZ3V"
+	invoiceId : vars.invoiceId
 }]]]></http:uri-params>
+			<http:response-validator >
+				<http:success-status-code-validator values="200,404" />
+			</http:response-validator>
 		</http:request>
 		
 		<ee:transform doc:name="Transform Message" doc:id="b5a7e3c8-965a-4f3c-bb5f-93885456e075" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
+var old=({"id": vars.invoiceId }) ++ (payload - 'id')
 ---
-({"id": vars.invoiceId }) ++ (payload - 'id')]]></ee:set-payload>
+payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="7fbb0d3b-f0f2-463c-a534-d0ac95a36103" message="#[attributes.queryParams.'type']"/>
 		<choice doc:name="Choice" doc:id="d6d0727d-3615-4ddd-beed-4484d92927d8" >
 			<when expression="#[vars.'type' != null and vars.'type' == &quot;pdf&quot;]">
-				<flow-ref doc:name="Flow Reference" doc:id="d5a5fbeb-49e1-4e8a-a390-5147ba68886c" name="generatePDF" />
+				<ee:transform doc:name="invoicepdf url" doc:id="72f07490-19d3-4505-97b4-bab6e397ffa1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	url:payload.invoice_pdf
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[message.attributes.statusCode == 404]">
+				<ee:transform doc:name="404" doc:id="a7c64fa7-1aa5-4e50-a7a8-a7a14b339aab" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	invoiceId: vars.invoiceId,
+	message: "No Invoice Found!!! Please validate your invoiceId"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
 			</when>
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="42a5c298-bdab-4124-9f20-b484c81e29d6" message="processed!!!!!!!!!!"/>
 			</otherwise>
 		</choice>
 	</flow>
+	<!-- <flow name="kafka-producer-flow" doc:id="7f743cf5-5e1c-484d-9219-5aba9e778bb1" >
+		<http:listener doc:name="http" doc:id="d4f5a071-e3ea-4fd3-b0ec-38ddf25f33d3" config-ref="HTTP_Listener_config" path="kafka"/>
+		<logger level="INFO" doc:name="Publishing messages to kafka topic" doc:id="4439458e-b2f3-4270-86f5-e9d688eef7e5" message="Publishing messages to kafka topic"/>
+		<kafka:producer doc:name="Publish Message" doc:id="7751bbd6-c3c3-4958-b422-85ccb99c637b" config-ref="Apache_Kafka_Producer_configuration" topic="muleesb" key="#[now().milliseconds]"/>
+		<logger level="INFO" doc:name="Published to topic" doc:id="43b18f00-5c7c-4d7e-938c-ed3fa9ce33c5" message="Published to topic"/>
+	</flow> -->
+<!-- 	<flow name="sys-ecom-api-implFlow" doc:id="f2adde70-c8d0-4647-9072-004cedd7e68e" >
+		<kafka:consumer doc:name="Message Consumer" doc:id="b1590b72-87c6-47df-adfc-bd605234ab7b" config-ref="Apache_Kafka_Consumer_configuration" topic="muleesb"/>
+		<logger level="INFO" doc:name="Subscribing Message from Kafka Topic" doc:id="54ba7070-4146-401d-ac95-bdb6525ec009" message="Subscribing Message from Kafka Topic for key #[attributes.key]"/>
+		<ee:transform doc:name="path" doc:id="3a2a4a0d-f4f0-44e4-b551-01aa5c6f823f" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="path" ><![CDATA[%dw 2.0
+output application/java
+
+"D:\/test\/" ++ attributes.key ++ ".txt"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="19e87a4f-dda5-4786-8c38-809bb5dfda4b" config-ref="File_Config" path='#[vars.path]'/>
+	</flow> -->
 
 	</mule>

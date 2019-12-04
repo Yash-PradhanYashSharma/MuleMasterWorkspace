@@ -24,5 +24,5 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
 	<http:request-config name="SystemHttp_Request_configuration" doc:name="HTTP Request configuration" doc:id="3cad4161-e9c9-4f54-b378-b6ce4b339466" basePath="${system.http.basePath}" >
 		<http:request-connection host="${system.http.host}" port="${system.http.port}" connectionIdleTimeout="${system.http.timeout}" />
 	</http:request-config>
-	<api-gateway:autodiscovery apiId="15820980" doc:name="API Autodiscovery" doc:id="ac50173e-9b51-470c-8320-c246da034b4a" flowRef="api-main" />
+	<api-gateway:autodiscovery apiId="15870879" doc:name="API Autodiscovery" doc:id="ac50173e-9b51-470c-8320-c246da034b4a" flowRef="api-main" />
 </mule>

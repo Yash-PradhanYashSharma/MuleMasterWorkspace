@@ -1,9 +1,0 @@
-system:
-  http:
-    host: "localhost"
-    port: "8083"
-    basePath: "/v1/sys/api"
-    timeout: "1200000"
-  auth:
-    clientId: ""
-    clientSecret: ""

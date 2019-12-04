@@ -1,6 +1,0 @@
-http:
-  port: "8082"
-  path: "v1/proc/api"
-  retry:
-    count: "5"
-    timeout: "60000"

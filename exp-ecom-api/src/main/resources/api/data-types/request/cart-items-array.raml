@@ -1,0 +1,23 @@
+#%RAML 1.0 DataType
+description: cart items array
+type: object
+properties:
+  productId?: string
+  productWidth?: number
+  productDepth?: number
+  productHeight?: number
+  productWeight?: number
+  quantity?: number
+  selectedQuantity?: number
+  price?: number
+  productName?: string
+  productDescription?: string
+  inventoryItemStatus?: string | nil
+  productPromos?:  
+    type: array
+    items: !include productPromos-array.raml
+  productPrices?:
+    type: array
+    items: !include productPrices-array.raml
+  selectedProductPromoId?: string
+    

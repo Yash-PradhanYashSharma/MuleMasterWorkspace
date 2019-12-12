@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="incident-to-serviceNow-flow" doc:id="34abcf98-77a7-4516-b6de-da766eadf31d" >
+		<logger level="INFO" doc:name="Logger" doc:id="f00889e7-5332-4dc2-9feb-21e82bb5900d" message="typee: #[attributes.queryParams.'type']"/>
+		<set-variable value="#['/60439/incident_services/' ++ attributes.queryParams.'type']" doc:name="path" doc:id="d0d8ad95-351d-4743-9ea2-a49635f9957c" variableName="path"/>
+		<http:request method="POST" doc:name="Request" doc:id="8333b082-43fe-4a2a-a65f-fc4a829b6a31" config-ref="ServiceNow_HTTP_Request_configuration" path="#[vars.path]" />
+		<ee:transform doc:name="Transform Message" doc:id="da9e4aa4-5124-4e69-82f3-24a0336c8271" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

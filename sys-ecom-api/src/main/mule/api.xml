@@ -61,4 +61,7 @@ output application/json
     <flow name="post:\order-router:application\json:api-config">
 		<flow-ref doc:name="order-router-flow" doc:id="7495da8a-aa76-4301-8685-42a867775550" name="order-router-flow"/>
     </flow>
+	<flow name="post:\logticket:application\json:api-config" doc:id="208d649e-dc86-469b-b1c1-3892d4d86050" >
+		<flow-ref doc:name="incident-to-serviceNow-flow" doc:id="9d28e632-9cfc-4eb1-b6ef-2f6c58cc14bc" name="incident-to-serviceNow-flow"/>
+	</flow>
 </mule>

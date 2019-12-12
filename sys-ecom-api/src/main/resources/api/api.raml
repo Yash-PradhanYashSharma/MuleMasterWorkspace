@@ -73,3 +73,14 @@ securedBy: [ClientIdAuth]
       application/json:
     responses:
       200:
+      
+/logticket:
+  post:
+    description: logging ticket agaist orderid
+    is: [Errorable]
+    body:
+      application/json:
+        example: !include examples/request/logticket.json
+        type: !include data-types/request/logticket.raml
+    responses:
+      200:

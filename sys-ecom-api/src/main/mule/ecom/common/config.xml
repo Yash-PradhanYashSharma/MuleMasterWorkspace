@@ -41,6 +41,13 @@ http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/
 	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="66ab74ff-11a3-4cf0-be11-0340e9a6d757" >
 		<wsc:connection wsdlLocation="wsdl/shipment.wsdl" service="getShipmentService" port="getShipmentSoap11" address="http://10.26.8.249:8080/ws" />
 	</wsc:config>
+	<http:request-config name="ServiceNow_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="64fa93b3-6c61-499e-a0ee-dc251019ceda" basePath="/api" >
+		<http:request-connection protocol="HTTPS" host="dev67471.service-now.com" >
+			<http:authentication >
+				<http:basic-authentication username="Beth.Anglin" password="snow!098" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
 	
 	
 </mule>

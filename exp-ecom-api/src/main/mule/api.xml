@@ -89,18 +89,8 @@ output application/json
     <flow name="post:\cart\refresh:application\json:api-config">
         <flow-ref doc:name="cart-router-flow" doc:id="427077e5-4a64-4ad4-9822-84858d5b6e50" name="cart-router-flow" />
     </flow>
-    <flow name="post:\userDetails:application\json:api-config">
-        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  errorCode: "BadRequest",
-  errorDescription: "The request could not be understood by the server due to invalid payload"
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+    <flow name="post:\logticket:application\json:api-config">
+        <flow-ref doc:name="log-ticket-flow" doc:id="ff1d4f00-2a89-45be-8647-2c5b65d2ecd7" name="log-ticket-flow"/>
     </flow>
     <flow name="get:\order\list:api-config">
 		<ee:transform doc:name="Transform Message" doc:id="e5509110-62e6-4748-bc5b-3343ff985cc4" >

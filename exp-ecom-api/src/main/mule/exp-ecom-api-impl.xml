@@ -74,4 +74,14 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 }]]]></http:query-params>
 		</http:request>
 	</flow>
+	<flow name="log-ticket-flow" doc:id="576daaaf-f461-49b3-aedc-17af6edf7201" >
+		<logger level="INFO" doc:name="INFO Logger: Logging Ticket" doc:id="7a1de033-7170-4546-8893-9725a5f35719" message="INFO Logger: Logging Ticket"/>
+		<http:request method="POST" doc:name="System:LogTicket API" doc:id="00b1b1ce-ce60-4159-a8e4-7754b7d0b90f" config-ref="SystemHttp_Request_configuration" path="/logticket">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+		"type" : attributes.queryParams.'type'
+}]]]></http:query-params>
+		</http:request>
+	</flow>
 </mule>

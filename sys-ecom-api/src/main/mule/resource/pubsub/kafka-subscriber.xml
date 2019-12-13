@@ -14,7 +14,7 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 					<ee:set-payload><![CDATA[%dw 2.0
 output application/x-www-form-urlencoded
 ---
-"customer": "cus_GAxUJZ68UTDiWk"
+"customer": "cus_GLUPTUanS9SDQD"
 ]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
@@ -116,11 +116,11 @@ payload]]></ee:set-variable>
 output application/x-www-form-urlencoded
 ---
 {
-	"customer": "cus_GAxUJZ68UTDiWk",
+	"customer": "cus_GLUPTUanS9SDQD",
 	"description": payload.productId,
 	"currency": "INR",
 	"quantity": payload.quantity,
-	"unit_amount": payload.unitPrice
+	"unit_amount": payload.unitPrice * 100
 }]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
